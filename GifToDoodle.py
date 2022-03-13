@@ -10,25 +10,24 @@ fpath = sys.argv[1]
 n_frames = 0
 duration = 0
 
-if(len(os.listdir('frames_processed/')) == 0):
-    with Image.open(fpath) as gif:
-        n_frames = gif.n_frames
-        duration = gif.duration
-        for i in range(gif.n_frames):
-            gif.seek(i)
-            gif.save('frames_raw/{}.png'.format(i))
+with Image.open(fpath) as gif:
+    n_frames = gif.n_frames
+    duration = gif.info['duration']
+    for i in range(gif.n_frames):
+        gif.seek(i)
+        gif.save('frames_raw/{}.png'.format(i))
 
 
-    for i in range(n_frames):
-        frame_path = 'frames_raw/'+str(i)+'.png'
-        data = gr.processing_utils.encode_url_or_file_to_base64(frame_path)
-        ai_url = 'https://hf.space/gradioiframe/carolineec/informativedrawings/+/api/predict/'
-        r = requests.post(ai_url,  json={'data': [data]})
-        print(str(i), str(r.status_code))
-        processed_data = r.json()['data'][0]
-        output_path = 'frames_processed/'+str(i)+'.png'
-        temp = gr.processing_utils.decode_base64_to_file(processed_data, encryption_key=None, file_path=None)
-        shutil.copy(temp.name, output_path)
+for i in range(n_frames):
+    frame_path = 'frames_raw/'+str(i)+'.png'
+    data = gr.processing_utils.encode_url_or_file_to_base64(frame_path)
+    ai_url = 'https://hf.space/gradioiframe/carolineec/informativedrawings/+/api/predict/'
+    r = requests.post(ai_url,  json={'data': [data]})
+    print(str(i), str(r.status_code))
+    processed_data = r.json()['data'][0]
+    output_path = 'frames_processed/'+str(i)+'.png'
+    temp = gr.processing_utils.decode_base64_to_file(processed_data, encryption_key=None, file_path=None)
+    shutil.copy(temp.name, output_path)
 
 imgs = (Image.open(f) for f in sorted(glob.glob('frames_processed/*.png')))
 img = next(imgs)  # extract first image from iterator
